@@ -5,5 +5,8 @@ results/
 .DS_Store
 testing/
 testing*
+tests/
+tests*
 *.pyc
 null/
+.vscode/
