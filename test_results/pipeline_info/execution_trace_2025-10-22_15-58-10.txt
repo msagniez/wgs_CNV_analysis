@@ -1,0 +1,3 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
+1	ee/77bf93	37043	NFCORE_CNVANALYSIS:CNVANALYSIS:MAPPING:MINIMAP2_ALIGN (Sample1)	FAILED	137	2025-10-22 15:58:21.521	1m 6s	1m 6s	-	-	-	-	-
+2	4c/0a249b	38421	NFCORE_CNVANALYSIS:CNVANALYSIS:MAPPING:MINIMAP2_ALIGN (Sample1)	FAILED	137	2025-10-22 15:59:29.455	1m 10s	1m 10s	-	-	-	-	-

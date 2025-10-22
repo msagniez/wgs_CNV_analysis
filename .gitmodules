@@ -14,3 +14,7 @@
 	path = modules/local/samtools
 	url = https://github.com/chusj-pigu/wf-modules.git
 	branch = samtools
+[submodule "modules/local/cramino"]
+	path = modules/local/cramino
+	url = https://github.com/chusj-pigu/wf-modules.git
+	branch = cramino
