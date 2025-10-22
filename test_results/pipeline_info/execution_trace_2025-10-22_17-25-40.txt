@@ -1,0 +1,2 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
+1	fb/e01350	61737	NFCORE_CNVANALYSIS:CNVANALYSIS:MAPPING:MINIMAP2_ALIGN (Sample1)	COMPLETED	0	2025-10-22 17:25:51.361	3.2s	2.5s	78.7%	188.6 MB	493.4 MB	44.6 MB	1.2 KB

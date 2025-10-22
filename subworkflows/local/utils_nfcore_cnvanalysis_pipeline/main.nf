@@ -74,21 +74,49 @@ workflow PIPELINE_INITIALISATION {
 
     Channel
         .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
-        .map {
-            meta, fastq_1, fastq_2 ->
-                if (!fastq_2) {
-                    return [ meta.id, meta + [ single_end:true ], [ fastq_1 ] ]
-                } else {
-                    return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ] ]
-                }
+        .map { meta, path_to_fastq, ref ->
+            // Validate reference file
+            def refPath = ref.toString()
+            def refFile = new File(refPath)
+            if (!refFile.exists()) {
+                error("Reference file for sample '${meta.id}' does not exist: ${refPath}")
+            }
+            def r = refPath.toLowerCase()
+            if (!(r.endsWith('.fa') || r.endsWith('.fasta') || r.endsWith('.fa.gz') || r.endsWith('.fasta.gz'))) {
+                error("Reference file for sample '${meta.id}' must be a .fa or .fasta file (optionally gzipped): ${refPath}")
+            }
+
+            // Validate fastq directory
+            def fqDirPath = path_to_fastq.toString()
+            def fqDir = new File(fqDirPath)
+            if (!fqDir.exists() || !fqDir.isDirectory()) {
+                error("FastQ directory for sample '${meta.id}' does not exist or is not a directory: ${fqDirPath}")
+            }
+
+            // Find fastq files inside the provided directory
+            def fastqFiles = fqDir.listFiles()?.findAll { f ->
+                def n = f.name.toLowerCase()
+                return n.endsWith('.fq') || n.endsWith('.fq.gz') || n.endsWith('.fastq') || n.endsWith('.fastq.gz')
+            }?.collect { it.path } ?: []
+            if (fastqFiles.size() == 0) {
+                error("No FastQ files found in directory for sample '${meta.id}': ${fqDirPath}")
+            }
+
+            // Infer endedness: if any file looks like R2 assume paired-end, otherwise single-end
+            def isPaired = fastqFiles.any { it =~ /(?i)(_R?2|_2)\\./ }
+
+            if (isPaired) {
+                meta = meta + [ single_end:false ]
+            } else {
+                meta = meta + [ single_end:true ]
+            }
+
+            // Return tuple: sample id, meta (for grouping/validation), list of fastq file paths and reference path
+            return [ meta.id, meta, fastqFiles, refPath ]
         }
         .groupTuple()
         .map { samplesheet ->
             validateInputSamplesheet(samplesheet)
-        }
-        .map {
-            meta, fastqs ->
-                return [ meta, fastqs.flatten() ]
         }
         .set { ch_samplesheet }
 
@@ -161,7 +189,7 @@ def validateInputParameters() {
 // Validate channels from input samplesheet
 //
 def validateInputSamplesheet(input) {
-    def (metas, fastqs) = input[1..2]
+    def (metas, fastqs, refs) = input[1..3]
 
     // Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end
     def endedness_ok = metas.collect{ meta -> meta.single_end }.unique().size == 1
@@ -169,7 +197,13 @@ def validateInputSamplesheet(input) {
         error("Please check input samplesheet -> Multiple runs of a sample must be of the same datatype i.e. single-end or paired-end: ${metas[0].id}")
     }
 
-    return [ metas[0], fastqs ]
+        // Return meta map, fastq directory path (string), and reference path (string)
+        def meta = metas[0]
+        // fastqs is a list of lists of fastqFiles from groupTuple; we want the original directory path
+        def fastqDirPath = fastqs.flatten()
+        def refPath = refs[0]
+
+        return [ meta, fastqDirPath, refPath ]
 }
 //
 // Get attribute from genome config file e.g. fasta
