@@ -1,11 +1,11 @@
 // Import modules
-include { QDNASEQ_CALL         } from '../../../modules/local/qdnaseq/main.nf'         // minimap2 alignment
+include { QDNASEQ_CALL         } from '../../../modules/local/qdnaseq/main.nf'         // QDNAseq CNV calling
 
 // Define the main workflow
 workflow CNV_CHECK {
     take:
     bam         // channel: from mapping workflow, includes index
-    ref         // reference channel with index
+    ref         // reference ID (hg19 or hg38)
 
     main:
     ch_versions = Channel.empty() // For collecting version info
