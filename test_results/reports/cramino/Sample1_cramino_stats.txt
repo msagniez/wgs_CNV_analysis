@@ -12,7 +12,7 @@ Mean length	278.00
 
 Median identity	83.87
 Mean identity	83.87
-Modal identity	84.1
+Modal identity	83.5
 
 Path	Sample1.indexed.bam
 Creation time	NA

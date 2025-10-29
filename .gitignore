@@ -8,6 +8,7 @@ testing*
 tests/
 tests*
 test_data/
+test_results/
 *.pyc
 null/
 .vscode/

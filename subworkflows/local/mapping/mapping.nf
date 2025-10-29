@@ -23,8 +23,25 @@ workflow MAPPING {
     // Sort and index BAM
     SAMTOOLS_SORT(SAMTOOLS_TOBAM.out.bamfile)
     SAMTOOLS_INDEX(SAMTOOLS_SORT.out.sortedbam)
-    
+
     // Compute coverage stats
     CRAMINO_STATS(SAMTOOLS_INDEX.out.bamfile_index)
 
+    // Collect versions from all modules
+    ch_versions = MINIMAP2_ALIGN.out.versions
+        .mix(SAMTOOLS_TOBAM.out.versions)
+        .mix(SAMTOOLS_SORT.out.versions)
+        .mix(SAMTOOLS_INDEX.out.versions)
+        .mix(CRAMINO_STATS.out.versions)
+
+    emit:
+    bam      = SAMTOOLS_INDEX.out.bamfile_index       // Final sorted BAM with index
+    coverage = CRAMINO_STATS.out.stats                // Coverage stats
+    versions = ch_versions                            // All tool versions
+
 }
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    THE END
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/

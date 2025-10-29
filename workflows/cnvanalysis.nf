@@ -4,6 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { MAPPING } from '../subworkflows/local/mapping/mapping.nf'
+include { CNV_CHECK } from '../subworkflows/local/cnv_check/cnv_check.nf'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -23,12 +24,23 @@ workflow CNVANALYSIS {
 
     ch_versions = Channel.empty()
     //
-    // MODULE: Run Mapping modules
+    // Run Mapping modules
     //
     MAPPING (
        ch_samplesheet
     )
-    
+
+    // Prep reference channel with refID only
+    ch_ref = ch_samplesheet.map { meta, fastqFiles, ref -> 
+    def refName = file(ref).name.replaceAll(/.fa/, '').replaceAll(/_.*$/, '')
+    tuple(meta, refName)
+    }.view { tuple -> println("CNVANALYSIS ch_ref tuple: ${tuple}") }
+
+    // Run CNV_check modules
+    CNV_CHECK (
+       MAPPING.out.bam,
+       ch_ref
+    )
 
     //
     // Collate and save software versions

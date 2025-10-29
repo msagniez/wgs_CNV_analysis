@@ -85,6 +85,13 @@ workflow PIPELINE_INITIALISATION {
             if (!(r.endsWith('.fa') || r.endsWith('.fasta') || r.endsWith('.fa.gz') || r.endsWith('.fasta.gz'))) {
                 error("Reference file for sample '${meta.id}' must be a .fa or .fasta file (optionally gzipped): ${refPath}")
             }
+            
+            // Check for the presence of the .fai index file
+            def faiPath = refPath + ".fai"
+            def faiFile = new File(faiPath)
+            if (!faiFile.exists()) {
+                error("Index file (.fai) for reference '${refPath}' does not exist. Please index the reference using 'samtools faidx ${refPath}'")
+            }
 
             // Validate fastq directory
             def fqDirPath = path_to_fastq.toString()
