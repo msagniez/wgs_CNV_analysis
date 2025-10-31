@@ -5,6 +5,7 @@
 */
 include { MAPPING } from '../subworkflows/local/mapping/mapping.nf'
 include { CNV_CHECK } from '../subworkflows/local/cnv_check/cnv_check.nf'
+include { SNP_CHECK } from '../subworkflows/local/snp_check/snp_check.nf'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -34,12 +35,25 @@ workflow CNVANALYSIS {
     ch_ref = ch_samplesheet.map { meta, fastqFiles, ref -> 
     def refName = file(ref).name.replaceAll(/.fa/, '').replaceAll(/_.*$/, '')
     tuple(meta, refName)
-    }.view { tuple -> println("CNVANALYSIS ch_ref tuple: ${tuple}") }
+    }
 
     // Run CNV_check modules
     CNV_CHECK (
        MAPPING.out.bam,
        ch_ref
+    )
+
+    // Prep reference channel and bam channel for SNP_check
+    ch_refinfo = ch_samplesheet.map { meta, fastqFiles, ref -> 
+    def refName = file(ref).name.replaceAll(/.fa/, '').replaceAll(/_.*$/, '')
+    tuple(meta, refName, ref, ref + '.fai')
+    }
+    ch_baminfo = ch_samplesheet.map{item -> item[0]}
+        .join(MAPPING.out.bam) //contains both paths to .bam and .bai files
+    // Run SNP_check modules
+    SNP_CHECK (
+       ch_baminfo,
+       ch_refinfo
     )
 
     //
